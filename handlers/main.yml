@@ -1,2 +1,14 @@
 ---
 # handlers file for Nainterceptor.webmail
+- name: "Restart nginx"
+  service:
+    name: nginx
+    state: restarted
+  when: ansible_distribution == 'CentOS'
+
+- name: "Enable nginx"
+  service:
+    name: nginx
+    state: started
+    enabled: yes
+  when: ansible_distribution == 'CentOS'

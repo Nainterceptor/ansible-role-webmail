@@ -1,2 +1,55 @@
 ---
 # tasks file for Nainterceptor.webmail
+- name: "Install PHP packages"
+  yum: name={{ item }} state=present
+  with_items:
+    - php
+    - php-intl
+    - php-common
+    - php-xml
+    - curl
+    - unzip
+    - httpd
+
+- name: "Download Rainloop"
+  get_url: >
+    url=http://repository.rainloop.net/v2/webmail/rainloop-community-latest.zip
+    dest=/tmp/rainloop-community-latest.zip
+
+- name: "Prepare - create Path"
+  file:
+    dest: "{{ rainloop_path }}"
+    state: directory
+    recurse: yes
+    group: apache
+    owner: apache
+
+- name: "Unzip rainloop"
+  unarchive:
+    src: /tmp/rainloop-community-latest.zip
+    dest: "{{ rainloop_path }}"
+    copy: no
+    creates: "{{ rainloop_path }}/index.php"
+    group: apache
+    owner: apache
+
+- name: "Replace httpd service"
+  copy: src=../files/httpd.service dest=/usr/lib/systemd/system/httpd.service
+
+- name: "Place httpd vhost"
+  copy: src=../files/vhost.conf dest=/etc/httpd/conf.d/rainloop.conf
+
+- name: "Prepare - remove welcome vhost"
+  file:
+    dest: "/etc/httpd/conf.d/welcome.conf"
+    state: absent
+
+- name: "Configure rainloop"
+  template:
+    src: "../files/application.ini.j2"
+    dest: "{{ rainloop_path }}/data/_data_/_default_/configs/application.ini"
+    group: apache
+    owner: apache
+  notify:
+    - "Enable nginx"
+    - "Restart nginx"

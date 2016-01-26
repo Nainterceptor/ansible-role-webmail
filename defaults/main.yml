@@ -1,2 +1,3 @@
 ---
 # defaults file for Nainterceptor.webmail
+rainloop_path: "/var/www/rainloop"
